@@ -1,0 +1,61 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: test-deployment2
+  labels:
+    app: test-app2
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: test-app2
+  template:
+    metadata:
+      labels:
+        app: test-app2
+    spec:
+      containers:
+      - name: nginx
+        image: dockersamples/static-site
+        env:
+        - name: AUTHOR
+          value: test
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service2
+spec:
+  selector:
+    app: test-app2
+  ports:
+    - name: http
+      protocol: 'TCP'
+      port: 80
+      targetPort: 80
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: test-ingress2
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: "/$1"
+    #    nginx.ingress.kubernetes.io/configuration-snippet: "rewrite /test / break;"
+    kubernetes.io/tls-acme: "true"
+spec:
+  tls:
+  - hosts:
+    - kube.citizenscience.ch
+    secretName: kube.citizenscience.ch
+  rules:
+  - host: kube.citizenscience.ch
+    http:
+      paths:
+      - path: "/test"
+        backend:
+          serviceName: test-service2
+          servicePort: http

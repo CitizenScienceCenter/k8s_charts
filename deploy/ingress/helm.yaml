@@ -1,0 +1,3 @@
+controller:
+  clusterIP: 130.60.24.245
+  hostNetwork: true
