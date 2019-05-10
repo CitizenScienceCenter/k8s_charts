@@ -1,24 +1,25 @@
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  name: test-deployment2
+  name: test-wenker
   labels:
-    app: test-app2
+    app: test-wenker
+  namespace: c3s-test
 spec:
   replicas: 1
   strategy:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: test-app2
+      app: test-wenker
   template:
     metadata:
       labels:
-        app: test-app2
+        app: test-wenker
     spec:
       containers:
       - name: nginx
-        image: dockersamples/static-site
+        image: registry.citizenscience.ch/wenker
         env:
         - name: AUTHOR
           value: test
@@ -28,10 +29,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: test-service2
+  name: test-wenker-service
+  namespace: c3s-test
 spec:
   selector:
-    app: test-app2
+    app: test-wenker
   ports:
     - name: http
       protocol: 'TCP'
@@ -41,9 +43,10 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: test-ingress2
+  name: test-wenker-ingress
+  namespace: c3s-test
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: "/$1"
+    nginx.ingress.kubernetes.io/rewrite-target: "/"
     #    nginx.ingress.kubernetes.io/configuration-snippet: "rewrite /test / break;"
     kubernetes.io/tls-acme: "true"
 spec:
@@ -55,7 +58,7 @@ spec:
   - host: kube.citizenscience.ch
     http:
       paths:
-      - path: "/test"
+      - path: "/wenker/test"
         backend:
-          serviceName: test-service2
+          serviceName: test-wenker-service
           servicePort: http
