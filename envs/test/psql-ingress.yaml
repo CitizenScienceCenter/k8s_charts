@@ -1,0 +1,21 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: psql-test-ingress
+  namespace: c3s-test
+  annotations:
+    ingress.kubernetes.io/rewrite-target: "/"
+    kubernetes.io/tls-acme: "true"
+spec:
+  tls:
+  - hosts:
+    - kube.citizenscience.ch
+    secretName: kube.citizenscience.ch
+  rules:
+  - host: kube.citizenscience.ch
+    http:
+      paths:
+      - path: "/c3s-test/db"
+        backend:
+          serviceName: psql-db-test-postgresql
+          servicePort: 5432

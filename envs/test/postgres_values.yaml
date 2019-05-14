@@ -1,0 +1,5 @@
+postgresqlUsername: c3s_admin
+potgresqlPassword: tester
+postgresqlDatabase: cs
+persistence:
+  enabled: false

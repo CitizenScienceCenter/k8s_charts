@@ -8,10 +8,12 @@ spec:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-    - kube.citizenscience.ch
+    - '*.citizenscience.ch'
+    - 'citizenscience.ch'
   acme:
     config:
     - http01:
         ingressClass: nginx
       domains:
-        - kube.citizenscience.ch
+        - '*.citizenscience.ch'
+        - 'citizenscience.ch'

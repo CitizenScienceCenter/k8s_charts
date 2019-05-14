@@ -4,6 +4,7 @@ metadata:
   name: test-deployment
   labels:
     app: test-app
+  namespace: c3s-test
 spec:
   replicas: 1
   strategy:
@@ -29,19 +30,21 @@ apiVersion: v1
 kind: Service
 metadata:
   name: test-service
+  namespace: c3s-test
 spec:
   selector:
     app: test-app
   ports:
     - name: http
       protocol: 'TCP'
-      port: 80
+      port: 443
       targetPort: 80
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: test-ingress
+  namespace: c3s-test
   annotations:
     ingress.kubernetes.io/rewrite-target: "/"
     kubernetes.io/tls-acme: "true"
@@ -54,7 +57,7 @@ spec:
   - host: kube.citizenscience.ch
     http:
       paths:
-      - path: "/"
+      - path: "/c3s-test"
         backend:
           serviceName: test-service
-          servicePort: http
+          servicePort: https
