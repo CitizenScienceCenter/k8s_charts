@@ -1,49 +1,49 @@
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  name: cccs-prod
+  name: cs-prod
   namespace: c3s-prod
   labels:
-    app: cccs-prod-app
+    app: cs-prod-app
 spec:
   replicas: 1
   strategy:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: cccs-prod-app
+      app: cs-prod-app
   template:
     metadata:
       labels:
-        app: cccs-prod-app
+        app: cs-prod-app
     spec:
       containers:
       - name: nginx
         imagePullPolicy: Always
-        image: registry.citizenscience.ch/cssite:master8ffb2d0
+        image: registry.citizenscience.ch/cssite:master6646c0d
         ports:
-        - containerPort: 80
+        - containerPort: 8080
       imagePullSecrets:
       - name: regcred
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: cccs-prod-service
+  name: cs-prod-service
   namespace: c3s-prod
 spec:
   selector:
-    app: cccs-prod-app
+    app: cs-prod-app
   ports:
     - name: http
       protocol: 'TCP'
       port: 80
-      targetPort: 80
+      targetPort: 8080
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: cccs-prod-ingress
+  name: cs-prod-ingress
   namespace: c3s-prod
   annotations:
     #nginx.ingress.kubernetes.io/rewrite-target: /$2
@@ -56,13 +56,13 @@ metadata:
 spec:
   tls:
   - hosts:
-    - citizenscience.ch
+    - api-staging.citizenscience.ch
     secretName: tls-certificate-secret
   rules:
-  - host: citizenscience.ch
+  - host: api-staging.citizenscience.ch
     http:
       paths:
       - path: "/"
         backend:
-          serviceName: cccs-prod-service
+          serviceName: cs-prod-service
           servicePort: http

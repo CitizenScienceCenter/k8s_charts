@@ -1,50 +1,50 @@
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  name: cccs-prod
-  namespace: c3s-prod
+  name: ${NAME}
+  namespace: ${NS}
   labels:
-    app: cccs-prod-app
+    app: ${NAME}-app
 spec:
   replicas: 1
   strategy:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: cccs-prod-app
+      app: ${NAME}-app
   template:
     metadata:
       labels:
-        app: cccs-prod-app
+        app: ${NAME}-app
     spec:
       containers:
       - name: nginx
         imagePullPolicy: Always
-        image: registry.citizenscience.ch/cssite:master8ffb2d0
+        image: registry.citizenscience.ch/${IMG}
         ports:
-        - containerPort: 80
+        - containerPort: ${PORT}
       imagePullSecrets:
       - name: regcred
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: cccs-prod-service
-  namespace: c3s-prod
+  name: ${NAME}-service
+  namespace: ${NS}
 spec:
   selector:
-    app: cccs-prod-app
+    app: ${NAME}-app
   ports:
     - name: http
       protocol: 'TCP'
       port: 80
-      targetPort: 80
+      targetPort: ${PORT}
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: cccs-prod-ingress
-  namespace: c3s-prod
+  name: ${NAME}-ingress
+  namespace: ${NS}
   annotations:
     #nginx.ingress.kubernetes.io/rewrite-target: /$2
     #nginx.ingress.kubernetes.io/configuration-snippet: |
@@ -56,13 +56,21 @@ metadata:
 spec:
   tls:
   - hosts:
-    - citizenscience.ch
+    - ${HOST}
+    - www.${HOST}
     secretName: tls-certificate-secret
   rules:
-  - host: citizenscience.ch
+  - host: ${HOST}
     http:
       paths:
       - path: "/"
         backend:
-          serviceName: cccs-prod-service
+          serviceName: ${NAME}-service
+          servicePort: http
+  - host: www.${HOST}
+    http:
+      paths:
+      - path: "/"
+        backend:
+          serviceName: ${NAME}-service
           servicePort: http

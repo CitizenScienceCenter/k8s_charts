@@ -1,0 +1,26 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: cccs-prod-ingress
+  namespace: c3s-prod
+  annotations:
+    #nginx.ingress.kubernetes.io/rewrite-target: /$2
+    #nginx.ingress.kubernetes.io/configuration-snippet: |
+    #  more_set_headers "server: hide";
+    #  more_set_headers "X-Content-Type-Options: nosniff";
+    #  more_set_headers "X-Frame-Options: DENY";
+    #  more_set_headers "X-Xss-Protection: 1";
+    kubernetes.io/tls-acme: "true"
+spec:
+  tls:
+  - hosts:
+    - www.citizenscience.ch
+    secretName: tls-certificate-secret
+  rules:
+  - host: www.citizenscience.ch
+    http:
+      paths:
+      - path: "/"
+        backend:
+          serviceName: cccs-prod-service
+          servicePort: http

@@ -20,7 +20,7 @@ spec:
       containers:
       - name: nginx
         imagePullPolicy: Always
-        image: registry.citizenscience.ch/cssite:master8ffb2d0
+        image: registry.citizenscience.ch/cssite:master6646c0d
         ports:
         - containerPort: 80
       imagePullSecrets:
@@ -57,9 +57,17 @@ spec:
   tls:
   - hosts:
     - citizenscience.ch
+    - www.citizenscience.ch
     secretName: tls-certificate-secret
   rules:
   - host: citizenscience.ch
+    http:
+      paths:
+      - path: "/"
+        backend:
+          serviceName: cccs-prod-service
+          servicePort: http
+  - host: www.citizenscience.ch
     http:
       paths:
       - path: "/"

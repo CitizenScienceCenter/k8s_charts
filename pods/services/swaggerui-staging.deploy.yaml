@@ -1,50 +1,53 @@
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  name: cccs-prod
-  namespace: c3s-prod
+  name: swaggerui-staging
+  namespace: c3s-staging
   labels:
-    app: cccs-prod-app
+    app: swaggerui-staging-app
 spec:
   replicas: 1
   strategy:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: cccs-prod-app
+      app: swaggerui-staging-app
   template:
     metadata:
       labels:
-        app: cccs-prod-app
+        app: swaggerui-staging-app
     spec:
       containers:
       - name: nginx
         imagePullPolicy: Always
-        image: registry.citizenscience.ch/cssite:master8ffb2d0
+        image: swaggerapi/swagger-ui
         ports:
-        - containerPort: 80
+        - containerPort: 8080
+        env:
+          - name: API_URL
+            value: https://api-staging.citizenscience.ch/api/v2/openapi.json
       imagePullSecrets:
       - name: regcred
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: cccs-prod-service
-  namespace: c3s-prod
+  name: swaggerui-staging-service
+  namespace: c3s-staging
 spec:
   selector:
-    app: cccs-prod-app
+    app: swaggerui-staging-app
   ports:
     - name: http
       protocol: 'TCP'
       port: 80
-      targetPort: 80
+      targetPort: 8080
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: cccs-prod-ingress
-  namespace: c3s-prod
+  name: swaggerui-staging-ingress
+  namespace: c3s-staging
   annotations:
     #nginx.ingress.kubernetes.io/rewrite-target: /$2
     #nginx.ingress.kubernetes.io/configuration-snippet: |
@@ -56,13 +59,21 @@ metadata:
 spec:
   tls:
   - hosts:
-    - citizenscience.ch
-    secretName: tls-certificate-secret
+    - openapi-staging.citizenscience.ch
+    - www.openapi-staging.citizenscience.ch
+    secretName: openapi-staging.citizenscience.ch
   rules:
-  - host: citizenscience.ch
+  - host: openapi-staging.citizenscience.ch
     http:
       paths:
       - path: "/"
         backend:
-          serviceName: cccs-prod-service
+          serviceName: swaggerui-staging-service
+          servicePort: http
+  - host: www.openapi-staging.citizenscience.ch
+    http:
+      paths:
+      - path: "/"
+        backend:
+          serviceName: swaggerui-staging-service
           servicePort: http
