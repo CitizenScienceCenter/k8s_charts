@@ -1,52 +1,55 @@
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  name: ${NAME}
-  namespace: ${NS}
+  name: swaggerui-prod
+  namespace: c3s-prod
   labels:
-    app: ${NAME}-app
+    app: swaggerui-prod-app
 spec:
   replicas: 1
   strategy:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: ${NAME}-app
+      app: swaggerui-prod-app
   template:
     metadata:
       labels:
-        app: ${NAME}-app
+        app: swaggerui-prod-app
     spec:
       containers:
       - name: nginx
         imagePullPolicy: Always
-        image: registry.citizenscience.ch/${IMG}
+        image: swaggerapi/swagger-ui
         ports:
-        - containerPort: ${PORT}
+        - containerPort: 8080
+        env:
+        - name: API_URL
+          value: https://api.citizenscience.ch/api/v2/swagger.json
       imagePullSecrets:
       - name: regcred
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: ${NAME}-service
-  namespace: ${NS}
+  name: swaggerui-prod-service
+  namespace: c3s-prod
 spec:
   selector:
-    app: ${NAME}-app
+    app: swaggerui-prod-app
   ports:
     - name: http
       protocol: 'TCP'
       port: 80
-      targetPort: ${PORT}
+      targetPort: 8080
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: ${NAME}-ingress
-  namespace: ${NS}
+  name: swaggerui-prod-ingress
+  namespace: c3s-prod
   annotations:
-    #nginx.ingress.kubernetes.io/rewrite-target: /$2
+    # nginx.ingress.kubernetes.io/rewrite-target: /
     #nginx.ingress.kubernetes.io/configuration-snippet: |
     #  more_set_headers "server: hide";
     #  more_set_headers "X-Content-Type-Options: nosniff";
@@ -56,21 +59,14 @@ metadata:
 spec:
   tls:
   - hosts:
-    - ${HOST}
-    - www.${HOST}
-    secretName: ${HOST}
+    - explorer.citizenscience.ch
+    - www.explorer.citizenscience.ch
+    secretName: explorer.citizenscience.ch
   rules:
-  - host: ${HOST}
+  - host: explorer.citizenscience.ch
     http:
       paths:
       - path: "/"
         backend:
-          serviceName: ${NAME}-service
-          servicePort: http
-  - host: www.${HOST}
-    http:
-      paths:
-      - path: "/"
-        backend:
-          serviceName: ${NAME}-service
+          serviceName: swaggerui-prod-service
           servicePort: http

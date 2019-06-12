@@ -1,0 +1,136 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  creationTimestamp: "2019-06-12T09:36:47Z"
+  generation: 2
+  labels:
+    app: prometheus-operator-alertmanager
+    chart: prometheus-operator-5.12.0
+    heritage: Tiller
+    release: prom
+  name: alertmanager-prom-prometheus-operator-alertmanager
+  namespace: monitoring
+  ownerReferences:
+  - apiVersion: monitoring.coreos.com/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: Alertmanager
+    name: prom-prometheus-operator-alertmanager
+    uid: 73f7745c-8cf1-11e9-aaa9-fa163ed9f188
+  resourceVersion: "6953836"
+  selfLink: /apis/apps/v1/namespaces/monitoring/statefulsets/alertmanager-prom-prometheus-operator-alertmanager
+  uid: 992a5da5-8cf5-11e9-aaa9-fa163ed9f188
+spec:
+  podManagementPolicy: OrderedReady
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      alertmanager: prom-prometheus-operator-alertmanager
+      app: alertmanager
+  serviceName: alertmanager-operated
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        alertmanager: prom-prometheus-operator-alertmanager
+        app: alertmanager
+    spec:
+      containers:
+      - args:
+        - --config.file=/etc/alertmanager/config/alertmanager.yaml
+        - --cluster.listen-address=[$(POD_IP)]:6783
+        - --storage.path=/alertmanager
+        - --data.retention=120h
+        - --web.listen-address=:9093
+        - --web.external-url=http://prom-prometheus-operator-alertmanager.monitoring:9093
+        - --web.route-prefix=/
+        - --log.level=debug
+        - --cluster.peer=alertmanager-prom-prometheus-operator-alertmanager-0.alertmanager-operated.monitoring.svc:6783
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        image: quay.io/prometheus/alertmanager:v0.17.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 100
+          httpGet:
+            path: /-/healthy
+            port: web
+            scheme: HTTP
+          periodSeconds: 100
+          successThreshold: 1
+          timeoutSeconds: 30
+        name: alertmanager
+        ports:
+        - containerPort: 9093
+          name: web
+          protocol: TCP
+        - containerPort: 6783
+          name: mesh
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 100
+          httpGet:
+            path: /-/ready
+            port: web
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 50
+          successThreshold: 1
+          timeoutSeconds: 30
+        resources:
+          requests:
+            memory: 200Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/alertmanager/config
+          name: config-volume
+        - mountPath: /alertmanager
+          name: alertmanager-prom-prometheus-operator-alertmanager-db
+      - args:
+        - -webhook-url=http://127.0.0.1:9093/-/reload
+        - -volume-dir=/etc/alertmanager/config
+        image: quay.io/coreos/configmap-reload:v0.0.1
+        imagePullPolicy: IfNotPresent
+        name: config-reloader
+        resources:
+          limits:
+            cpu: 100m
+            memory: 25Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/alertmanager/config
+          name: config-volume
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 2000
+        runAsNonRoot: true
+        runAsUser: 1000
+      serviceAccount: prom-prometheus-operator-alertmanager
+      serviceAccountName: prom-prometheus-operator-alertmanager
+      terminationGracePeriodSeconds: 0
+      volumes:
+      - name: config-volume
+        secret:
+          defaultMode: 420
+          secretName: alertmanager-prom-prometheus-operator-alertmanager
+      - emptyDir: {}
+        name: alertmanager-prom-prometheus-operator-alertmanager-db
+  updateStrategy:
+    type: RollingUpdate
+status:
+  collisionCount: 0
+  currentReplicas: 1
+  currentRevision: alertmanager-prom-prometheus-operator-alertmanager-6c96747696
+  observedGeneration: 2
+  replicas: 1
+  updateRevision: alertmanager-prom-prometheus-operator-alertmanager-5cc4c4f5f6

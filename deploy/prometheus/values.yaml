@@ -1,0 +1,13 @@
+grafana:
+  adminPassword: "${graf-admin}"
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      kubernetes.io/tls-acme: "true"
+    hosts:
+      - monitor.citizenscience.ch
+    tls:
+      - secretName: monitor.citizenscience.ch
+        hosts:
+          - monitor.citizenscience.ch
